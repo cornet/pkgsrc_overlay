@@ -1,0 +1,3 @@
+* Added multicast-patch to make it build on Solaris
+* Updated configure patch
+* Added --disable-capabilities to the configure options

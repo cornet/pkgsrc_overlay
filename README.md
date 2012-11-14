@@ -1,4 +1,4 @@
 pkgsrc_overlay
 ==============
 
-SmartOS pkgsrc overlay
+Some fixes for SmartOS packages

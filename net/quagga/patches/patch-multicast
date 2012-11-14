@@ -1,0 +1,49 @@
+--- lib/sockopt.c.orig	2012-03-12 11:39:20.000000000 +0000
++++ lib/sockopt.c	2012-11-13 11:59:40.776764949 +0000
+@@ -326,6 +326,46 @@
+   m.s_addr = htonl(ifindex);
+ 
+   return setsockopt (sock, IPPROTO_IP, IP_MULTICAST_IF, (void *)&m, sizeof(m));
++#elif defined(SUNOS_5)
++  struct lifnum    lifn;
++  struct lifconf   lifc;
++  struct lifreq   *lifr;
++
++  lifn.lifn_family = AF_INET;
++  lifn.lifn_flags = 0;
++  if (ioctl(sock,SIOCGLIFNUM,&lifn) == -1) {
++    return -1;
++  }
++  lifc.lifc_family = AF_INET;
++  lifc.lifc_len = lifn.lifn_count * sizeof(struct lifreq);
++  lifc.lifc_buf = malloc(lifc.lifc_len);
++
++  if (lifc.lifc_buf == NULL) {
++    return -1; // failed to allocate memory: return different res?
++  }
++  /* the following ioctl should fail if the system has grown additonal
++     interfaces since we called ioctl(SIOCGLIFNUM) */
++  int res;
++  if ((res = ioctl(sock,SIOCGLIFCONF,&lifc)) >= 0) {
++    lifr = lifc.lifc_req;
++    res = -1;
++    int n;
++    struct in_addr a;
++    /* using lifc.lifc_len, just in  case some interfaces disappeared
++       since ioctl(SIOCGLIFNUM) */
++    for (n = lifc.lifc_len / sizeof(lifreq); n > 0; n--) {
++      a=((struct sockaddr_in *)&lifr->lifr_addr)->sin_addr;
++      ioctl(sock,SIOCGLIFINDEX,lifr);
++      if (lifr->lifr_index == ifindex) {
++	res = ioctl(sock,IPPROTO_IP,IP_MULTICAST_IF,&a,sizeof(a));
++	break;
++      }
++      lifr++;
++    }
++  }
++  free(lifc.lifc_buf);
++  return res;
++}
+ #else
+   #error "Unsupported multicast API"
+ #endif

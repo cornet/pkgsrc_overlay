@@ -1,0 +1,11 @@
+--- configure.orig	2012-11-13 13:07:41.708936725 +0000
++++ configure	2012-11-13 13:11:14.522916977 +0000
+@@ -16472,6 +16472,8 @@
+ {
+ #if (defined(__FreeBSD__) && ((__FreeBSD_version >= 500022 && __FreeBSD_version < 700000) || (__FreeBSD_version < 500000 && __FreeBSD_version >= 440000))) || (defined(__NetBSD__) && defined(__NetBSD_Version__) && __NetBSD_Version__ >= 106010000)
+   return (0);
++#elif (defined(__DragonFly__) || defined(__sun))
++  return (0);
+ #else
+   #error No support for BSD struct ip_mreq hack detected
+ #endif
